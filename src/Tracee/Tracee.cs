@@ -119,33 +119,37 @@ public sealed class Tracee : ITracee
     {
         var orderedMetrics = _synced
             .Concat([new KeyValuePair<string, long>(_traceeKey, _stopwatch.ElapsedMilliseconds)])
-            .OrderBy(e => e.Key);
+            .OrderBy(e => e.Key)
+            .Select(e => (e.Key, e.Value));
+
+        var content = BuildPrettyLog(orderedMetrics);
         
-        var stringBuilder = new StringBuilder();
-        foreach (var metrics in orderedMetrics)
-        {
-            stringBuilder.AppendLine($"[{metrics.Value} ms] {metrics.Key}");
-        }
-#pragma warning disable CA2254
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        _logger.Log(logLevel, stringBuilder.ToString());
-#pragma warning restore CA2254
+        _logger.Log(logLevel, content);
     }
 
     public void LogSynced(LogLevel logLevel)
     {
         var orderedMetrics = _synced
-            .OrderBy(e => e.Key);
-        
-        var stringBuilder = new StringBuilder();
-        foreach (var metrics in orderedMetrics)
-        {
-            stringBuilder.AppendLine($"[{metrics.Value} ms] {metrics.Key}");
-        }
-#pragma warning disable CA2254
+            .OrderBy(e => e.Key)
+            .Select(e => (e.Key, e.Value));
+
+        var content = BuildPrettyLog(orderedMetrics);
+
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        _logger.Log(logLevel, stringBuilder.ToString());
-#pragma warning restore CA2254
+        _logger.Log(logLevel, content);
+    }
+
+    private static string BuildPrettyLog(IEnumerable<(string Key, long Value)> metrics)
+    {
+        var prepared = metrics.Select(e => (e.Key, Value: e.Value.ToString())).ToArray();
+        var padding = prepared.Max(e => e.Value.Length);
+        var stringBuilder = new StringBuilder();
+        foreach (var (key, value) in prepared)
+        {
+            stringBuilder.AppendLine($"[{value.PadLeft(padding)} ms] {key}");
+        }
+        return stringBuilder.ToString();
     }
 
     public void Dispose()
