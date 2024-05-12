@@ -4,6 +4,11 @@ internal sealed record TraceeMetricValue(long Milliseconds) : ITraceeMetricValue
 {
     public long Milliseconds { get; } = Milliseconds;
 
+    public TraceeMetricValue(TraceeMetricValue origin)
+    {
+        Milliseconds = origin.Milliseconds;
+    }
+
     public static TraceeMetricValue operator +(TraceeMetricValue current, TraceeMetricValue newValue)
     {
         return new TraceeMetricValue(current.Milliseconds + newValue.Milliseconds);

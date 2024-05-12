@@ -22,7 +22,9 @@ public sealed class Tracee : ITracee
     private readonly ConcurrentStack<Tracee> _stack;
     private readonly ConcurrentDictionary<int, ConcurrentStack<Tracee>> _stackPool;
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
-    private readonly ConcurrentDictionary<(int StackId, string Key, int Depth), long> _synced = new();
+
+    private readonly ConcurrentDictionary<TraceeMetricLabels, TraceeMetricValue> _synced = new();
+
     private bool _disposed;
 
     private Tracee(
@@ -41,6 +43,7 @@ public sealed class Tracee : ITracee
         _parent = parent;
 
         Depth = (_parent?.Depth ?? 0) + 1;
+        Created = (_parent?.Created ?? 0) + (_parent?.Milliseconds ?? 0);
         _stack = _stackPool.AddOrUpdate(
             StackId,
             _ => [],
@@ -66,25 +69,27 @@ public sealed class Tracee : ITracee
     public int StackId { get; }
     public string Key { get; }
     public int Depth { get; }
+    public long Created { get; }
 
     public long Milliseconds => _stopwatch.ElapsedMilliseconds;
 
-    public ITracee Scope(
+    public ITracee Scoped(
         string? key = null,
         string memberName = "")
     {
         if (StackToAttach.TryPeek(out var peek) && peek._instanceId != _instanceId)
-            return peek.Scope(key, memberName);
+            return peek.Scoped(key, memberName);
 
         var prefix = !string.IsNullOrWhiteSpace(Key)
             ? $"{Key}_"
             : string.Empty;
 
-        key = !string.IsNullOrWhiteSpace(key)
+        key = (!string.IsNullOrWhiteSpace(key)
             ? $"{prefix}{key}"
             : !string.IsNullOrWhiteSpace(memberName)
                 ? $"{prefix}{memberName}"
-                : $"{prefix}{Guid.NewGuid():N}";
+                : $"{prefix}{Guid.NewGuid():N}")
+            .ToLowerInvariant();
 
         var tracee = new Tracee(
             key,
@@ -103,7 +108,7 @@ public sealed class Tracee : ITracee
             return _parent.Fixed(key);
 
         var tracee = new Tracee(
-            key,
+            key.ToLowerInvariant(),
             _loggerCategoryName,
             _loggerFactory,
             new ConcurrentDictionary<int, ConcurrentStack<Tracee>>(
@@ -113,13 +118,12 @@ public sealed class Tracee : ITracee
         return tracee;
     }
 
-    public IReadOnlyDictionary<ITraceeMetricKey, ITraceeMetricValue> Collect()
+    public IReadOnlyDictionary<ITraceeMetricLabels, ITraceeMetricValue> Collect()
     {
         return _synced
-            .OrderBy(e => e.Key.Key)
-            .ToDictionary<KeyValuePair<(int StackId, string Key, int Depth), long>, ITraceeMetricKey,
+            .ToDictionary<KeyValuePair<TraceeMetricLabels, TraceeMetricValue>, ITraceeMetricLabels,
                 ITraceeMetricValue>(
-                item => new TraceeMetricKey(item.Key.StackId, item.Key.Key, item.Key.Depth),
+                item => new TraceeMetricLabels(item.Key),
                 item => new TraceeMetricValue(item.Value));
     }
 
@@ -166,14 +170,14 @@ public sealed class Tracee : ITracee
                         value + metrics.Value));
 
             _parent?._synced.AddOrUpdate(
-                (StackId, Key, Depth),
+                new TraceeMetricLabels(StackId, Key, Depth, Created),
                 key => SyncCreateValue(
                     key,
-                    _stopwatch.ElapsedMilliseconds),
+                    new TraceeMetricValue(_stopwatch.ElapsedMilliseconds)),
                 (key, value) => SyncUpdateValue(
                     key,
                     value,
-                    value + _stopwatch.ElapsedMilliseconds));
+                    value.AddMilliseconds(_stopwatch.ElapsedMilliseconds)));
 
             _logger.LogTrace(
                 "[disposed {Milliseconds} ms]\t{InstanceId:N}.{Stack}.{Key}",
@@ -200,24 +204,29 @@ public sealed class Tracee : ITracee
             null);
     }
 
-    private long SyncCreateValue((int StackId, string Key, int Depth) key, long value)
+    private TraceeMetricValue SyncCreateValue(
+        TraceeMetricLabels labels,
+        TraceeMetricValue value)
     {
         _logger.LogTrace(
             "[sync created] {Stack}.{Key}\t({Milliseconds} ms)",
-            key.StackId,
-            key.Key,
-            value);
+            labels.StackId,
+            labels.Key,
+            value.Milliseconds);
         return value;
     }
 
-    private long SyncUpdateValue((int StackId, string Key, int Depth) key, long currentValue, long newValue)
+    private TraceeMetricValue SyncUpdateValue(
+        TraceeMetricLabels labels, 
+        TraceeMetricValue currentValue,
+        TraceeMetricValue newValue)
     {
         _logger.LogTrace(
             "[sync updated] {Stack}.{Key}\t({Milliseconds} ms) -> ({NewMilliseconds} ms)",
-            key.StackId,
-            key.Key,
-            currentValue,
-            newValue);
+            labels.StackId,
+            labels.Key,
+            currentValue.Milliseconds,
+            newValue.Milliseconds);
         return newValue;
     }
 }

@@ -5,15 +5,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Tracee;
 
-public interface ITracee : ITraceeMetricKey, ITraceeMetricValue, IDisposable
+public interface ITracee : ITraceeMetricLabels, ITraceeMetricValue, IDisposable
 {
-    ITracee Scope(
+    ITracee Scoped(
         string? key = null,
         [CallerMemberName] string memberName = "");
 
     ITracee Fixed(string key);
 
-    IReadOnlyDictionary<ITraceeMetricKey, ITraceeMetricValue> Collect();
+    IReadOnlyDictionary<ITraceeMetricLabels, ITraceeMetricValue> Collect();
 
     void Log(LogLevel logLevel, string message);
 }
