@@ -1,27 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 
 namespace Tracee;
 
-public interface ITracee : IDisposable
+public interface ITracee : ITraceeMetricKey, ITraceeMetricValue, IDisposable
 {
-    long Milliseconds { get; }
-
-    void Log(
-        LogLevel logLevel,
-        string message,
-        [CallerMemberName] string memberName = "",
-        [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0);
-
     ITracee Scope(
-        string? traceeKey = null,
+        string? key = null,
         [CallerMemberName] string memberName = "");
 
-    ITracee Fixed(string traceeKey);
+    ITracee Fixed(string key);
 
-    void LogAll(LogLevel logLevel);
+    IReadOnlyDictionary<ITraceeMetricKey, ITraceeMetricValue> Collect();
 
-    void LogSynced(LogLevel logLevel);
+    void Log(LogLevel logLevel, string message);
 }
