@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PackageId>Tracee.AspNetCore</PackageId>
+        <Version>0.0.1</Version>
+        <Product>Tracee</Product>
+        <Authors>Alexey Vorobev</Authors>
+        <PackageProjectUrl>https://github.com/vorobalek/tracee</PackageProjectUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Tracee\Tracee.csproj" />
+    </ItemGroup>
+
+</Project>

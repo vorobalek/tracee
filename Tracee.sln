@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6D0B1F39-54E0-47E1-ADA7-23594C07810D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracee", "src\Tracee\Tracee.csproj", "{0622F01E-3B7D-414A-A96E-90341EFF79D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracee.AspNetCore", "src\Tracee.AspNetCore\Tracee.AspNetCore.csproj", "{CA2C306F-F897-45EB-9F77-7B2E75676862}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0622F01E-3B7D-414A-A96E-90341EFF79D2} = {6D0B1F39-54E0-47E1-ADA7-23594C07810D}
+		{CA2C306F-F897-45EB-9F77-7B2E75676862} = {6D0B1F39-54E0-47E1-ADA7-23594C07810D}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0622F01E-3B7D-414A-A96E-90341EFF79D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0622F01E-3B7D-414A-A96E-90341EFF79D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0622F01E-3B7D-414A-A96E-90341EFF79D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0622F01E-3B7D-414A-A96E-90341EFF79D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA2C306F-F897-45EB-9F77-7B2E75676862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA2C306F-F897-45EB-9F77-7B2E75676862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA2C306F-F897-45EB-9F77-7B2E75676862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA2C306F-F897-45EB-9F77-7B2E75676862}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
