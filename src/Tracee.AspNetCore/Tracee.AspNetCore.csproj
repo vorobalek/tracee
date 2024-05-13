@@ -6,7 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>Tracee.AspNetCore</PackageId>
-        <Version>0.0.1</Version>
+        <Version Condition="'$(VersionSuffix)' != ''">0.0.2-$(VersionSuffix)</Version>
+        <Version Condition="'$(VersionSuffix)' == ''">0.0.2</Version>
         <Product>Tracee</Product>
         <Authors>Alexey Vorobev</Authors>
         <PackageProjectUrl>https://github.com/vorobalek/tracee</PackageProjectUrl>
