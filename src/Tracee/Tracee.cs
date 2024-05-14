@@ -13,7 +13,6 @@ namespace Tracee;
 public sealed class Tracee : ITracee
 {
     private readonly Guid _instanceId = Guid.NewGuid();
-    private readonly ILogger _logger;
 
     private readonly string _loggerCategoryName;
     private readonly ILoggerFactory _loggerFactory;
@@ -48,8 +47,8 @@ public sealed class Tracee : ITracee
             StackId,
             _ => [],
             (_, stack) => stack);
-        _logger = _loggerFactory.CreateLogger(_loggerCategoryName);
-        _logger.LogTrace(
+        Logger = _loggerFactory.CreateLogger(_loggerCategoryName);
+        Logger.LogTrace(
             "[created {Milliseconds} ms]\t{InstanceId:N}.{Stack}.{Key}",
             _stopwatch.ElapsedMilliseconds,
             _instanceId,
@@ -72,6 +71,8 @@ public sealed class Tracee : ITracee
     public long Created { get; }
 
     public long Milliseconds => _stopwatch.ElapsedMilliseconds;
+
+    public ILogger Logger { get; }
 
     public ITracee Scoped(
         string? key = null,
@@ -130,7 +131,7 @@ public sealed class Tracee : ITracee
     public void Log(LogLevel logLevel, string message)
     {
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        _logger.Log(logLevel, message);
+        Logger.Log(logLevel, message);
     }
 
     public void Dispose()
@@ -179,7 +180,7 @@ public sealed class Tracee : ITracee
                     value,
                     value.AddMilliseconds(_stopwatch.ElapsedMilliseconds)));
 
-            _logger.LogTrace(
+            Logger.LogTrace(
                 "[disposed {Milliseconds} ms]\t{InstanceId:N}.{Stack}.{Key}",
                 _stopwatch.ElapsedMilliseconds,
                 _instanceId,
@@ -208,7 +209,7 @@ public sealed class Tracee : ITracee
         TraceeMetricLabels labels,
         TraceeMetricValue value)
     {
-        _logger.LogTrace(
+        Logger.LogTrace(
             "[sync created] {Stack}.{Key}\t({Milliseconds} ms)",
             labels.StackId,
             labels.Key,
@@ -221,7 +222,7 @@ public sealed class Tracee : ITracee
         TraceeMetricValue currentValue,
         TraceeMetricValue newValue)
     {
-        _logger.LogTrace(
+        Logger.LogTrace(
             "[sync updated] {Stack}.{Key}\t({Milliseconds} ms) -> ({NewMilliseconds} ms)",
             labels.StackId,
             labels.Key,

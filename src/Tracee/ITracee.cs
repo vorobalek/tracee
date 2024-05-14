@@ -7,6 +7,8 @@ namespace Tracee;
 
 public interface ITracee : ITraceeMetricLabels, ITraceeMetricValue, IDisposable
 {
+    ILogger Logger { get; }
+    
     ITracee Scoped(
         string? key = null,
         [CallerMemberName] string memberName = "");
@@ -14,6 +16,4 @@ public interface ITracee : ITraceeMetricLabels, ITraceeMetricValue, IDisposable
     ITracee Fixed(string key);
 
     IReadOnlyDictionary<ITraceeMetricLabels, ITraceeMetricValue> Collect();
-
-    void Log(LogLevel logLevel, string message);
 }
