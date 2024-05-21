@@ -28,6 +28,7 @@ public sealed class Tracee : ITracee
 
     private Tracee(
         string key,
+        string keySplit,
         string? loggerCategoryName,
         ILoggerFactory loggerFactory,
         ConcurrentDictionary<int, ConcurrentStack<Tracee>> stackPool,
@@ -36,6 +37,7 @@ public sealed class Tracee : ITracee
         StackId = CurrentStackId;
 
         Key = key;
+        KeySplit = keySplit;
         _loggerCategoryName = loggerCategoryName ?? $"Tracee.{_instanceId:N}";
         _loggerFactory = loggerFactory;
         _stackPool = stackPool;
@@ -65,6 +67,8 @@ public sealed class Tracee : ITracee
             ? _stackPool[CurrentStackId]
             : _stack;
 
+    public string KeySplit { get; }
+
     public int StackId { get; }
     public string Key { get; }
     public int Depth { get; }
@@ -85,15 +89,15 @@ public sealed class Tracee : ITracee
             ? $"{Key}_"
             : string.Empty;
 
-        key = (!string.IsNullOrWhiteSpace(key)
+        key = !string.IsNullOrWhiteSpace(key)
             ? $"{prefix}{key}"
             : !string.IsNullOrWhiteSpace(memberName)
                 ? $"{prefix}{memberName}"
-                : $"{prefix}{Guid.NewGuid():N}")
-            .ToLowerInvariant();
+                : $"{prefix}{Guid.NewGuid():N}";
 
         var tracee = new Tracee(
             key,
+            KeySplit,
             _loggerCategoryName,
             _loggerFactory,
             _stackPool,
@@ -109,7 +113,8 @@ public sealed class Tracee : ITracee
             return _parent.Fixed(key);
 
         var tracee = new Tracee(
-            key.ToLowerInvariant(),
+            key,
+            KeySplit,
             _loggerCategoryName,
             _loggerFactory,
             new ConcurrentDictionary<int, ConcurrentStack<Tracee>>(
@@ -126,12 +131,6 @@ public sealed class Tracee : ITracee
                 ITraceeMetricValue>(
                 item => new TraceeMetricLabels(item.Key),
                 item => new TraceeMetricValue(item.Value));
-    }
-
-    public void Log(LogLevel logLevel, string message)
-    {
-        // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        Logger.Log(logLevel, message);
     }
 
     public void Dispose()
@@ -191,13 +190,21 @@ public sealed class Tracee : ITracee
         _disposed = true;
     }
 
+    public void Log(LogLevel logLevel, string message)
+    {
+        // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
+        Logger.Log(logLevel, message);
+    }
+
     public static ITracee Create(
         string key,
-        string? loggerCategoryName,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        string keySplit = "_",
+        string? loggerCategoryName = null)
     {
         return new Tracee(
             key,
+            keySplit,
             loggerCategoryName,
             loggerFactory,
             new ConcurrentDictionary<int, ConcurrentStack<Tracee>>(
@@ -218,7 +225,7 @@ public sealed class Tracee : ITracee
     }
 
     private TraceeMetricValue SyncUpdateValue(
-        TraceeMetricLabels labels, 
+        TraceeMetricLabels labels,
         TraceeMetricValue currentValue,
         TraceeMetricValue newValue)
     {

@@ -1,5 +1,3 @@
-using System;
-
 namespace Tracee;
 
 public interface ITraceeMetricLabels
@@ -9,6 +7,6 @@ public interface ITraceeMetricLabels
     string Key { get; }
 
     int Depth { get; }
-    
+
     long Created { get; }
 }

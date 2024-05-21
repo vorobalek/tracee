@@ -12,14 +12,16 @@ public static class TraceeExtensions
     public static IServiceCollection AddTracee(
         this IServiceCollection services,
         string traceeKey = "",
+        string traceeKeySplit = "_",
         string? loggerCategoryName = null)
     {
         services.AddOptions<TraceeOptions>();
         services.AddScoped<ITracee>(serviceProvider =>
             Tracee.Create(
                 traceeKey,
-                loggerCategoryName,
-                serviceProvider.GetRequiredService<ILoggerFactory>()));
+                serviceProvider.GetRequiredService<ILoggerFactory>(),
+                traceeKeySplit,
+                loggerCategoryName));
         services.AddTransient<TraceeMiddleware>();
         return services;
     }

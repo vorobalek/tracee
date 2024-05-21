@@ -2,12 +2,12 @@ namespace Tracee.Internals;
 
 internal sealed record TraceeMetricValue(long Milliseconds) : ITraceeMetricValue
 {
-    public long Milliseconds { get; } = Milliseconds;
-
     public TraceeMetricValue(TraceeMetricValue origin)
     {
         Milliseconds = origin.Milliseconds;
     }
+
+    public long Milliseconds { get; } = Milliseconds;
 
     public static TraceeMetricValue operator +(TraceeMetricValue current, TraceeMetricValue newValue)
     {
