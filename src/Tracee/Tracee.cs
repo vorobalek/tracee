@@ -44,7 +44,7 @@ public sealed class Tracee : ITracee
         _parent = parent;
 
         Depth = (_parent?.Depth ?? 0) + 1;
-        Created = (_parent?.Created ?? 0) + (_parent?.Milliseconds ?? 0);
+        Created = Stopwatch.GetTimestamp();
         _stack = _stackPool.AddOrUpdate(
             StackId,
             _ => [],
