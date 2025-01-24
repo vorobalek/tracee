@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Tracee.Internals;
@@ -29,6 +30,7 @@ public sealed class Tracee : ITracee
     private Tracee(
         string key,
         string keySplit,
+        bool ignoreNested,
         string? loggerCategoryName,
         ILoggerFactory loggerFactory,
         ConcurrentDictionary<int, ConcurrentStack<Tracee>> stackPool,
@@ -38,6 +40,7 @@ public sealed class Tracee : ITracee
 
         Key = key;
         KeySplit = keySplit;
+        IgnoreNested = ignoreNested;
         _loggerCategoryName = loggerCategoryName ?? $"Tracee.{_instanceId:N}";
         _loggerFactory = loggerFactory;
         _stackPool = stackPool;
@@ -67,7 +70,8 @@ public sealed class Tracee : ITracee
             ? _stackPool[CurrentStackId]
             : _stack;
 
-    public string KeySplit { get; }
+    private string KeySplit { get; }
+    private bool IgnoreNested { get; }
 
     public int StackId { get; }
     public string Key { get; }
@@ -80,10 +84,13 @@ public sealed class Tracee : ITracee
 
     public ITracee Scoped(
         string? key = null,
-        string memberName = "")
+        [CallerMemberName] string memberName = "",
+        bool ignoreNested = false)
     {
         if (StackToAttach.TryPeek(out var peek) && peek._instanceId != _instanceId)
-            return peek.Scoped(key, memberName);
+            return peek.Scoped(key, memberName, ignoreNested);
+
+        if (IgnoreNested) return this;
 
         var prefix = !string.IsNullOrWhiteSpace(Key)
             ? $"{Key}_"
@@ -98,6 +105,7 @@ public sealed class Tracee : ITracee
         var tracee = new Tracee(
             key,
             KeySplit,
+            ignoreNested,
             _loggerCategoryName,
             _loggerFactory,
             _stackPool,
@@ -115,6 +123,7 @@ public sealed class Tracee : ITracee
         var tracee = new Tracee(
             key,
             KeySplit,
+            false,
             _loggerCategoryName,
             _loggerFactory,
             new ConcurrentDictionary<int, ConcurrentStack<Tracee>>(
@@ -200,11 +209,13 @@ public sealed class Tracee : ITracee
         string key,
         ILoggerFactory loggerFactory,
         string keySplit = "_",
+        bool ignoreNested = false,
         string? loggerCategoryName = null)
     {
         return new Tracee(
             key,
             keySplit,
+            ignoreNested,
             loggerCategoryName,
             loggerFactory,
             new ConcurrentDictionary<int, ConcurrentStack<Tracee>>(

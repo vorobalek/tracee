@@ -11,7 +11,8 @@ public interface ITracee : ITraceeMetricLabels, ITraceeMetricValue, IDisposable
 
     ITracee Scoped(
         string? key = null,
-        [CallerMemberName] string memberName = "");
+        [CallerMemberName] string memberName = "",
+        bool ignoreNested = false);
 
     ITracee Fixed(string key);
 
