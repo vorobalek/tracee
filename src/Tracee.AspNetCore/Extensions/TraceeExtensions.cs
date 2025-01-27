@@ -31,11 +31,13 @@ public static class TraceeExtensions
     public static IApplicationBuilder UseTracee(
         this IApplicationBuilder builder,
         string key = "request",
+        string? ignorePathPrefix = null,
         Func<ITracee, Task>? preRequestAsync = null,
         Func<ITracee, Task>? postRequestAsync = null)
     {
         var options = builder.ApplicationServices.GetRequiredService<IOptions<TraceeOptions>>();
         options.Value.Key = key;
+        options.Value.IgnorePathPrefix = ignorePathPrefix;
         options.Value.PreRequestAsync = preRequestAsync;
         options.Value.PostRequestAsync = postRequestAsync;
         return builder.UseMiddleware<TraceeMiddleware>();
