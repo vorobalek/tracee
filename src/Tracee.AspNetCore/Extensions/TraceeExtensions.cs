@@ -13,14 +13,17 @@ public static class TraceeExtensions
         this IServiceCollection services,
         string traceeKey = "",
         string traceeKeySplit = "_",
-        bool ignoreNested = false)
+        bool ignoreNested = false,
+        string? loggerCategoryName = null)
     {
         services.AddOptions<TraceeOptions>();
-        services.AddScoped<ITracee>(_ =>
+        services.AddScoped<ITracee>(serviceProvider =>
             Tracee.Create(
                 traceeKey,
+                serviceProvider.GetRequiredService<ILoggerFactory>(),
                 traceeKeySplit,
-                ignoreNested));
+                ignoreNested,
+                loggerCategoryName));
 
         services.AddTransient<TraceeMiddleware>();
         return services;

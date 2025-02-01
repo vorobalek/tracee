@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Tracee.Internals;
 
 namespace Tracee;
@@ -16,6 +17,7 @@ public sealed class Tracee : ITracee
     private readonly Tracee? _parent;
     private readonly string _keySplit;
     private readonly bool _ignoreNested;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly Stopwatch _stopwatch;
     private readonly ConcurrentDictionary<TraceeMetricLabels, TraceeMetricValue> _synced = new();
 
@@ -26,17 +28,20 @@ public sealed class Tracee : ITracee
         string keySplit,
         bool ignoreNested,
         string loggerCategoryName,
+        ILoggerFactory loggerFactory,
         Tracee? parent)
     {
         Key = key;
         _keySplit = keySplit;
         _ignoreNested = ignoreNested;
         LoggerCategoryName = loggerCategoryName;
+        _loggerFactory = loggerFactory;
         _parent = parent;
 
         Depth = (_parent?.Depth ?? 0) + 1;
         Created = Stopwatch.GetTimestamp();
 
+        Logger = _loggerFactory.CreateLogger(loggerCategoryName);
         _stopwatch = Stopwatch.StartNew();
 
         TraceStack.Value ??= new Stack<Tracee>();
@@ -45,6 +50,7 @@ public sealed class Tracee : ITracee
 
     public static ITracee Create(
         string key,
+        ILoggerFactory loggerFactory,
         string keySplit = "_",
         bool ignoreNested = false,
         string? loggerCategoryName = null)
@@ -57,6 +63,7 @@ public sealed class Tracee : ITracee
             keySplit,
             ignoreNested,
             loggerCategoryName,
+            loggerFactory,
             parent: null);
     }
 
@@ -77,6 +84,7 @@ public sealed class Tracee : ITracee
     public string Key { get; }
     public int Depth { get; }
     public long Created { get; }
+    public ILogger Logger { get; }
     public long Milliseconds => _stopwatch.ElapsedMilliseconds;
 
     private string LoggerCategoryName { get; }
@@ -100,6 +108,7 @@ public sealed class Tracee : ITracee
             _keySplit,
             ignoreNested,
             parent.LoggerCategoryName,
+            parent._loggerFactory,
             parent);
     }
 
@@ -114,6 +123,7 @@ public sealed class Tracee : ITracee
             _keySplit,
             ignoreNested: false,
             parent.LoggerCategoryName,
+            parent._loggerFactory,
             parent);
     }
 
