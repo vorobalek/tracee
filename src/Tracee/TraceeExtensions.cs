@@ -8,11 +8,13 @@ namespace Tracee;
 
 public static class TraceeExtensions
 {
-    public static void CollectAll(this ITracee tracee, LogLevel logLevel)
+    public static void CollectAll(this ITracee tracee,
+        ILogger logger,
+        LogLevel logLevel)
     {
         var metrics = tracee.Collect();
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-        tracee.Logger.Log(logLevel, BuildPrettyLog(metrics));
+        logger.Log(logLevel, BuildPrettyLog(metrics));
     }
 
     private static string BuildPrettyLog(IReadOnlyDictionary<ITraceeMetricLabels, ITraceeMetricValue> metrics)
