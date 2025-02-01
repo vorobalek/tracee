@@ -24,13 +24,14 @@ public static class TraceeExtensions
                 traceeKeySplit,
                 ignoreNested,
                 loggerCategoryName));
+
         services.AddTransient<TraceeMiddleware>();
         return services;
     }
 
     public static IApplicationBuilder UseTracee(
         this IApplicationBuilder builder,
-        string key = "request",
+        string key,
         string? ignorePathPrefix = null,
         Func<ITracee, Task>? preRequestAsync = null,
         Func<ITracee, Task>? postRequestAsync = null)
@@ -40,6 +41,7 @@ public static class TraceeExtensions
         options.Value.IgnorePathPrefix = ignorePathPrefix;
         options.Value.PreRequestAsync = preRequestAsync;
         options.Value.PostRequestAsync = postRequestAsync;
+
         return builder.UseMiddleware<TraceeMiddleware>();
     }
 }

@@ -10,16 +10,15 @@ public static class TraceeExtensions
 {
     public static void CollectAll(this ITracee tracee, LogLevel logLevel)
     {
-#pragma warning disable CA2254
         var metrics = tracee.Collect();
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
         tracee.Logger.Log(logLevel, BuildPrettyLog(metrics));
-#pragma warning restore CA2254
     }
 
     private static string BuildPrettyLog(IReadOnlyDictionary<ITraceeMetricLabels, ITraceeMetricValue> metrics)
     {
         if (metrics.Count == 0) return string.Empty;
+
         var minDepth = metrics.Min(metric => metric.Key.Depth);
         var prepared = metrics
             .GroupBy(metric => metric.Key.Key)
@@ -40,7 +39,8 @@ public static class TraceeExtensions
                         : string.Empty
                 )}{metric.Key}",
                 Value: $"{metric.Value} ms"
-            )).ToArray();
+            ))
+            .ToArray();
 
         var (metricsTitle, durationTitle) = ("Metric", "Duration (ms)");
         
@@ -49,20 +49,22 @@ public static class TraceeExtensions
                 (metricsTitle.Length, durationTitle.Length),
                 (padding, next) =>
                 {
-                    var (paddingKey, paddingValue) = padding;
+                    var (pk, pv) = padding;
                     return (
-                        Math.Max(paddingKey, next.Key.Length),
-                        Math.Max(paddingValue, next.Value.Length));
+                        Math.Max(pk, next.Key.Length),
+                        Math.Max(pv, next.Value.Length)
+                    );
                 });
-        var stringBuilder = new StringBuilder();
-        stringBuilder.AppendLine($"| {
-            metricsTitle.PadRight(paddingKey)
-        } | {
-            durationTitle.PadLeft(paddingValue)
-        } |");
-        stringBuilder.AppendLine($"|{new string('–', paddingKey + paddingValue + 5)}|");
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"| {metricsTitle.PadRight(paddingKey)} | {durationTitle.PadLeft(paddingValue)} |");
+        sb.AppendLine($"|{new string('–', paddingKey + paddingValue + 5)}|");
+
         foreach (var (key, value) in prepared)
-            stringBuilder.AppendLine($"| {key.PadRight(paddingKey)} | {value.PadLeft(paddingValue)} |");
-        return stringBuilder.ToString();
+        {
+            sb.AppendLine($"| {key.PadRight(paddingKey)} | {value.PadLeft(paddingValue)} |");
+        }
+
+        return sb.ToString();
     }
 }

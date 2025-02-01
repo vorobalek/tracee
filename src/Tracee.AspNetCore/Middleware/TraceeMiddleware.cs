@@ -11,21 +11,23 @@ internal sealed class TraceeMiddleware(
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        if (options.Value.IgnorePathPrefix is not null && 
-            context.Request.GetEncodedPathAndQuery().StartsWith(options.Value.IgnorePathPrefix))
-            await next(context);
-        else
+        if (!string.IsNullOrEmpty(options.Value.IgnorePathPrefix) && 
+            context.Request.GetEncodedPathAndQuery()
+                .StartsWith(options.Value.IgnorePathPrefix, StringComparison.OrdinalIgnoreCase))
         {
-            if (options.Value.PreRequestAsync is not null)
-                await options.Value.PreRequestAsync(tracee);
-
-            using (tracee.Scoped(options.Value.Key))
-            {
-                await next(context);
-            }
-
-            if (options.Value.PostRequestAsync is not null)
-                await options.Value.PostRequestAsync(tracee);
+            await next(context);
+            return;
         }
+
+        if (options.Value.PreRequestAsync is not null)
+            await options.Value.PreRequestAsync(tracee);
+
+        using (tracee.Scoped(options.Value.Key))
+        {
+            await next(context);
+        }
+
+        if (options.Value.PostRequestAsync is not null)
+            await options.Value.PostRequestAsync(tracee);
     }
 }
