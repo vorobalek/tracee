@@ -43,7 +43,7 @@ public static class TraceeExtensions
             .ToArray();
 
         var (metricsTitle, durationTitle) = ("Metric", "Duration (ms)");
-        
+
         var (paddingKey, paddingValue) = prepared
             .Aggregate(
                 (metricsTitle.Length, durationTitle.Length),

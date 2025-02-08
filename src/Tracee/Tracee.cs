@@ -13,11 +13,11 @@ namespace Tracee;
 public sealed class Tracee : ITracee
 {
     private static readonly AsyncLocal<Stack<Tracee>?> TraceStack = new();
+    private readonly bool _ignoreNested;
+    private readonly string _keySplit;
+    private readonly ILoggerFactory _loggerFactory;
 
     private readonly Tracee? _parent;
-    private readonly string _keySplit;
-    private readonly bool _ignoreNested;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly Stopwatch _stopwatch;
     private readonly ConcurrentDictionary<TraceeMetricLabels, TraceeMetricValue> _synced = new();
 
@@ -48,25 +48,6 @@ public sealed class Tracee : ITracee
         TraceStack.Value.Push(this);
     }
 
-    public static ITracee Create(
-        string key,
-        ILoggerFactory loggerFactory,
-        string keySplit = "_",
-        bool ignoreNested = false,
-        string? loggerCategoryName = null)
-    {
-        TraceStack.Value = null;
-
-        loggerCategoryName ??= "Tracee";
-        return new Tracee(
-            key,
-            keySplit,
-            ignoreNested,
-            loggerCategoryName,
-            loggerFactory,
-            parent: null);
-    }
-
     private static Tracee? CurrentTop
     {
         get
@@ -81,13 +62,13 @@ public sealed class Tracee : ITracee
         }
     }
 
+    private string LoggerCategoryName { get; }
+
     public string Key { get; }
     public int Depth { get; }
     public long Created { get; }
     public ILogger Logger { get; }
     public long Milliseconds => _stopwatch.ElapsedMilliseconds;
-
-    private string LoggerCategoryName { get; }
 
     public ITracee Scoped(
         string? key = null,
@@ -121,7 +102,7 @@ public sealed class Tracee : ITracee
         return new Tracee(
             finalKey,
             _keySplit,
-            ignoreNested: false,
+            false,
             parent.LoggerCategoryName,
             parent._loggerFactory,
             parent);
@@ -164,5 +145,24 @@ public sealed class Tracee : ITracee
             label,
             _ => new TraceeMetricValue(Milliseconds),
             (_, existing) => existing.AddMilliseconds(Milliseconds));
+    }
+
+    public static ITracee Create(
+        string key,
+        ILoggerFactory loggerFactory,
+        string keySplit = "_",
+        bool ignoreNested = false,
+        string? loggerCategoryName = null)
+    {
+        TraceStack.Value = null;
+
+        loggerCategoryName ??= "Tracee";
+        return new Tracee(
+            key,
+            keySplit,
+            ignoreNested,
+            loggerCategoryName,
+            loggerFactory,
+            null);
     }
 }

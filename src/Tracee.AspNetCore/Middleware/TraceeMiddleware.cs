@@ -11,9 +11,11 @@ internal sealed class TraceeMiddleware(
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        if (!string.IsNullOrEmpty(options.Value.IgnorePathPrefix) && 
-            context.Request.GetEncodedPathAndQuery()
-                .StartsWith(options.Value.IgnorePathPrefix, StringComparison.OrdinalIgnoreCase))
+        if (options.Value.IgnorePathPrefixes is { Length: > 0 } &&
+            options.Value.IgnorePathPrefixes.Any(x =>
+                context.Request
+                    .GetEncodedPathAndQuery()
+                    .StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
         {
             await next(context);
             return;
